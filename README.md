@@ -2,7 +2,7 @@
 
 This repository provides a comprehensive guide to Docker, a platform for containerizing applications. It covers common Docker troubleshooting scenarios, key Dockerfile instructions, best practices for managing containers, and day-to-day operations.
 
-## Docker Container Exits Immediately After Starting
+## 1. Docker Container Exits Immediately After Starting
 
 ### Issue
 A Docker container exits immediately after starting, often with an exit code indicating failure or completion.
@@ -33,7 +33,7 @@ A Docker container exits immediately after starting, often with an exit code ind
    docker run -it --entrypoint /bin/bash <image_name>
    ```
 
-## Purpose of EXPOSE in Dockerfile
+## 2. Purpose of EXPOSE in Dockerfile
 
 - **Purpose**: The `EXPOSE` instruction in a Dockerfile documents the ports an application inside the container listens on (e.g., `EXPOSE 80` for a web server).
 - **Not a Publishing Mechanism**: It does not automatically publish ports to the host. Publishing requires `docker run -p <host_port>:<container_port>` (e.g., `docker run -p 80:80`).
@@ -49,7 +49,7 @@ A Docker container exits immediately after starting, often with an exit code ind
   docker run -p 80:80 <image_name>
   ```
 
-## Port Not Accessible After Port Mapping
+## 3. Port Not Accessible After Port Mapping
 
 ### Issue
 You run a container with port mapping (e.g., `docker run -p 80:80`), but accessing `localhost:<port>` in a browser or API client fails or times out.
@@ -81,7 +81,7 @@ You run a container with port mapping (e.g., `docker run -p 80:80`), but accessi
 - Adjust firewall rules or security group settings.
 - Update the application to bind to `0.0.0.0`.
 
-## Data Lost When Container Stops and Restarts
+## 4. Data Lost When Container Stops and Restarts
 
 ### Issue
 Data stored in a container is lost when it stops or restarts because containers are ephemeral by default.
@@ -110,7 +110,7 @@ Use **Docker volumes** or **bind mounts** for persistent storage:
 ### Use Case
 For databases (e.g., MySQL) or applications requiring persistent data, use volumes to retain data across container lifecycles.
 
-## Changes Not Reflected After Rebuilding Docker Image
+## 5. Changes Not Reflected After Rebuilding Docker Image
 
 ### Issue
 You modified code, rebuilt the Docker image, but the changes are not reflected in the running container.
@@ -138,7 +138,7 @@ Docker uses **layer caching** to speed up builds. If the Dockerfile or context h
 - Use specific file paths in `COPY` or `ADD` to avoid unnecessary caching.
 - Leverage `.dockerignore` to exclude irrelevant files, reducing cache-related issues.
 
-## App Crashes with "Permission Denied" in Container
+## 6. App Crashes with "Permission Denied" in Container
 
 ### Issue
 An application works locally but fails with a "permission denied" error inside a Docker container.
@@ -170,7 +170,7 @@ An application works locally but fails with a "permission denied" error inside a
   RUN chown -R appuser:appuser /app
   ```
 
-## Docker Host Running Out of Disk Space
+## 7. Docker Host Running Out of Disk Space
 
 ### Issue
 The Docker host is running out of disk space due to accumulated images, containers, or volumes.
@@ -203,7 +203,7 @@ The Docker host is running out of disk space due to accumulated images, containe
 ### Note
 Volumes often consume significant space, especially for databases. Always ensure volumes are not critical before pruning.
 
-## Debugging a Live Container
+## 8. Debugging a Live Container
 
 ### Correct Approach
 To debug a running container, access its shell:
@@ -218,7 +218,7 @@ docker exec -it <container_id> /bin/sh
 ### Common Mistake
 Using `docker run -it` is incorrect here, as it starts a new container instead of accessing the running one.
 
-## Container Registry Used in Organizations
+## 9. Container Registry Used in Organizations
 
 - **Preferred Registries**: Enterprises typically avoid public Docker Hub due to security concerns. Common registries include:
   - Amazon Elastic Container Registry (ECR)
@@ -228,7 +228,7 @@ Using `docker run -it` is incorrect here, as it starts a new container instead o
   - JFrog Artifactory
 - **Reason**: These provide better security, access control, and integration with CI/CD pipelines.
 
-## Difference Between CMD and ENTRYPOINT in Dockerfile
+## 10. Difference Between CMD and ENTRYPOINT in Dockerfile
 
 - **CMD**: Specifies the default command to run when a container starts. It can be overridden by arguments in `docker run`.
 - **ENTRYPOINT**: Defines the main executable, which is harder to override unless explicitly specified with `--entrypoint`.
@@ -273,7 +273,7 @@ CMD ["echo", "Hello"]
 - `CMD` is fully replaced by `docker run` arguments.
 - `ENTRYPOINT` appends arguments unless overridden with `--entrypoint`.
 
-## Common Docker Commands Used Daily
+## 11. Common Docker Commands Used Daily
 
 - **Build Image**: Create an image from a Dockerfile:
   ```bash
@@ -304,7 +304,7 @@ CMD ["echo", "Hello"]
   docker system prune
   ```
 
-## Forcefully Removing a Container
+## 12. Forcefully Removing a Container
 
 ### When to Force Remove
 - Container is stuck, unresponsive, or restarting unexpectedly (e.g., during CI/CD pipelines).
