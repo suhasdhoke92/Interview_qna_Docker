@@ -1,6 +1,6 @@
 # Interview_qna_Docker
 
-This repository provides a comprehensive guide to Docker, a platform for containerizing applications. It covers common Docker troubleshooting scenarios, key Dockerfile instructions, and best practices for managing containers, ports, and data persistence.
+This repository provides a comprehensive guide to Docker, a platform for containerizing applications. It covers common Docker troubleshooting scenarios, key Dockerfile instructions, best practices for managing containers, and day-to-day operations.
 
 ## Docker Container Exits Immediately After Starting
 
@@ -138,5 +138,187 @@ Docker uses **layer caching** to speed up builds. If the Dockerfile or context h
 - Use specific file paths in `COPY` or `ADD` to avoid unnecessary caching.
 - Leverage `.dockerignore` to exclude irrelevant files, reducing cache-related issues.
 
+## App Crashes with "Permission Denied" in Container
+
+### Issue
+An application works locally but fails with a "permission denied" error inside a Docker container.
+
+### Causes
+- **User Permissions**: Locally, the app may run with elevated (e.g., root) privileges, but in the container, it runs as a non-root user (e.g., `appuser`) without sufficient permissions.
+- **File Access**: The application or user lacks executable permissions for files or directories.
+
+### Troubleshooting
+1. Check the user in the Dockerfile (e.g., `USER appuser`).
+2. Verify file permissions using `docker exec -it <container_id> /bin/bash` and `ls -l`.
+3. Inspect logs for specific errors:
+   ```bash
+   docker logs <container_id>
+   ```
+
+### Fix
+- **Add User in Dockerfile**: Create a non-root user with appropriate permissions:
+  ```dockerfile
+  RUN useradd -ms /bin/bash appuser
+  USER appuser
+  ```
+- **Set File Permissions**: Ensure the application or scripts have executable permissions:
+  ```dockerfile
+  RUN chmod +x /app/app.py
+  ```
+- **Adjust Ownership**: If needed, change ownership of directories:
+  ```dockerfile
+  RUN chown -R appuser:appuser /app
+  ```
+
+## Docker Host Running Out of Disk Space
+
+### Issue
+The Docker host is running out of disk space due to accumulated images, containers, or volumes.
+
+### Troubleshooting
+1. Check disk usage:
+   ```bash
+   docker system df
+   ```
+2. Identify unused images, containers, or volumes.
+
+### Fix
+- **Remove Dangling Images**: Delete images not used by any containers:
+  ```bash
+  docker system prune
+  ```
+- **Remove All Unused Resources**: Include unused images (not just dangling ones):
+  ```bash
+  docker system prune -a
+  ```
+- **Remove Unused Volumes**: Free up space used by unattached volumes:
+  ```bash
+  docker volume prune
+  ```
+- **Verify Cleanup**: Recheck disk usage:
+  ```bash
+  docker system df
+  ```
+
+### Note
+Volumes often consume significant space, especially for databases. Always ensure volumes are not critical before pruning.
+
+## Debugging a Live Container
+
+### Correct Approach
+To debug a running container, access its shell:
+```bash
+docker exec -it <container_id> /bin/bash
+```
+or, if `/bin/bash` is unavailable:
+```bash
+docker exec -it <container_id> /bin/sh
+```
+
+### Common Mistake
+Using `docker run -it` is incorrect here, as it starts a new container instead of accessing the running one.
+
+## Container Registry Used in Organizations
+
+- **Preferred Registries**: Enterprises typically avoid public Docker Hub due to security concerns. Common registries include:
+  - Amazon Elastic Container Registry (ECR)
+  - Azure Container Registry (ACR)
+  - Quay.io (managed by Red Hat)
+  - GitHub Container Registry (ghcr.io)
+  - JFrog Artifactory
+- **Reason**: These provide better security, access control, and integration with CI/CD pipelines.
+
+## Difference Between CMD and ENTRYPOINT in Dockerfile
+
+- **CMD**: Specifies the default command to run when a container starts. It can be overridden by arguments in `docker run`.
+- **ENTRYPOINT**: Defines the main executable, which is harder to override unless explicitly specified with `--entrypoint`.
+
+### Example
+Dockerfile with `ENTRYPOINT`:
+```dockerfile
+ENTRYPOINT ["echo", "Hello"]
+```
+Dockerfile with `CMD`:
+```dockerfile
+CMD ["echo", "Hello"]
+```
+
+- Build and run:
+  ```bash
+  docker build -t demo-ep ep/
+  docker run demo-ep
+  ```
+  Both print `Hello`.
+
+- Override behavior:
+  ```bash
+  docker run demo-ep world
+  ```
+  - **ENTRYPOINT**: Outputs `Hello world` (appends `world` to `echo Hello`).
+  - **CMD**: Fails, as it tries to run `world` as a command (not executable).
+
+- Correct CMD override:
+  ```bash
+  docker run demo-cmd echo world
+  ```
+  Outputs `world`.
+
+- Override ENTRYPOINT:
+  ```bash
+  docker run --entrypoint /bin/echo demo-ep world
+  ```
+  Outputs `world`.
+
+### Key Difference
+- `CMD` is fully replaced by `docker run` arguments.
+- `ENTRYPOINT` appends arguments unless overridden with `--entrypoint`.
+
+## Common Docker Commands Used Daily
+
+- **Build Image**: Create an image from a Dockerfile:
+  ```bash
+  docker build -t <image_name> .
+  ```
+- **Run Container**: Start a container from an image:
+  ```bash
+  docker run <image_name>
+  ```
+- **List Containers**: View running containers:
+  ```bash
+  docker ps
+  ```
+  Include stopped containers:
+  ```bash
+  docker ps -a
+  ```
+- **List Images**: View available images on the host:
+  ```bash
+  docker images
+  ```
+- **View Logs**: Check container logs:
+  ```bash
+  docker logs <container_id>
+  ```
+- **Clean Up**: Remove unused resources:
+  ```bash
+  docker system prune
+  ```
+
+## Forcefully Removing a Container
+
+### When to Force Remove
+- Container is stuck, unresponsive, or restarting unexpectedly (e.g., during CI/CD pipelines).
+- Need to clear a container that’s causing issues.
+
+### How to Force Remove
+1. Find the container ID:
+   ```bash
+   docker ps -a
+   ```
+2. Force remove the container:
+   ```bash
+   docker rm -f <container_id>
+   ```
+
 ## Conclusion
-Docker simplifies application deployment through containerization, but understanding its behavior is key to resolving issues like container exits, port mapping failures, data loss, and caching problems. By using proper commands, Dockerfile instructions, and persistence mechanisms like volumes, you can ensure reliable and efficient container management.
+Docker simplifies application deployment through containerization, but understanding its behavior is key to resolving issues like container exits, port mapping failures, data loss, permission errors, and disk space management. By using proper commands, Dockerfile instructions, and secure registries, you can ensure reliable and efficient container workflows.
